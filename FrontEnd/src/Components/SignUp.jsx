@@ -1,16 +1,44 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Login from "./Login";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 function SingUp() {
+  const navigate =useNavigate();
+  const location = useLocation()
+  const from = location.state?.from?.pathname || "/"
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    const userInfo = {
+      fullname: data.fullname,
+      email: data.email,
+      password: data.password,
+    };
+    await axios.post("http://localhost:4000/user/signup", userInfo).then(
+        (res) => {
+        console.log(res.data);
+        if (res.data) {
+          toast.success("SignUp Successfull");
+          navigate (from,{replace:true});
+        }
+        localStorage.setItem("User",JSON.stringify(res.data.User))
+      })
+      .catch((error) => {
+        if (error.res) {
+          toast.error("Error: " + error.res.data.message);
+          console.log(error);
+        }
+      });
+  };
+
   return (
     <div>
       <div className="flex h-screen items-center justify-center ">
@@ -33,10 +61,10 @@ function SingUp() {
                 type="text"
                 className="w-80 px-3 py-1 border rounded-md dark:bg-white outline-none "
                 placeholder="Enter Your Name"
-                {...register("name", { required: true })}
+                {...register("fullname", { required: true })}
               />
               <br />
-              {errors.name && (
+              {errors.fullname && (
                 <span className="text-sm text-red-600">
                   This field is required
                 </span>
@@ -64,7 +92,7 @@ function SingUp() {
               <span>Password</span>
               <br />
               <input
-                type="email"
+                type="password"
                 className="w-80 px-3 py-1 border rounded-md dark:bg-white outline-none "
                 placeholder="Enter Your Password"
                 {...register("password", { required: true })}
